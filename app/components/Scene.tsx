@@ -24,16 +24,13 @@ export const Scene = () => {
     renderer.setSize(sizes.width, sizes.height);
 
     const resizeViewport = () => {
-      // Update sizes
-      sizes.width = window.innerWidth;
-      sizes.height = window.innerWidth / 1.5;
+      const width = window.innerWidth;
+      const height = window.innerWidth / 1.5;
 
-      // Update camera
-      camera.aspect = sizes.width / sizes.height;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
 
-      // Update renderer
-      renderer.setSize(sizes.width, sizes.height);
+      renderer.setSize(width, height);
     };
 
     window.addEventListener("resize", resizeViewport);
