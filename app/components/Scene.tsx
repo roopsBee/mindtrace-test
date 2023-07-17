@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GUI } from "lil-gui";
-import { DragControls } from "three/addons/controls/DragControls.js";
+import { DragControls } from "three/examples/jsm/controls/DragControls";
 
 export const Scene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -124,12 +124,56 @@ export const Scene = () => {
     // set camera position
     camera.position.z = 1;
 
-    const controls = new DragControls(
-      [sidePanelBasket, sidePanelApple],
+    // create draggable objects
+    const draggableObjects: THREE.Object3D[] = [
+      sidePanelBasket,
+      sidePanelApple,
+    ];
+
+    // add event listener for pointer move
+    const pointer = new THREE.Vector2();
+    function onPointerMove(event: PointerEvent) {
+      // calculate pointer position in normalized device coordinates
+
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(event.clientY / (window.innerWidth / 1.5)) * 2 + 1;
+    }
+    window.addEventListener("pointermove", onPointerMove);
+
+    const dragControls = new DragControls(
+      draggableObjects,
       camera,
       renderer.domElement
     );
 
+    dragControls.addEventListener("dragend", (event) => {
+      console.table({ object: event.object.position, pointer });
+      const raycaster = new THREE.Raycaster();
+
+      // if basket
+      if (event.object === sidePanelBasket) {
+        // check if cursor is over table
+        raycaster.setFromCamera(pointer, camera);
+        const intersects = raycaster.intersectObject(table);
+        if (intersects.length > 0) {
+          const { x, y } = intersects[0].point;
+          // create new basket
+          const basketGeometry = new THREE.PlaneGeometry(1, 1);
+          const basketMaterial = new THREE.MeshBasicMaterial({
+            color: "#ff0000",
+          });
+          const basket = new THREE.Mesh(basketGeometry, basketMaterial);
+          basket.position.set(x, y, 0.2);
+          scene.add(basket);
+        } else {
+        }
+        event.object.position.set(-6, 2, 0.2);
+      }
+
+      //check if object is over side panel
+
+      // check if object is over another basket
+    });
     const animate = function () {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
