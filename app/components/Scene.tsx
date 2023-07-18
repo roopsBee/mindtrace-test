@@ -73,6 +73,14 @@ export const Scene = () => {
     const table = new THREE.Mesh(tableGeometry, tableMaterial);
     table.position.x = 1.5;
     scene.add(table);
+
+    // table bounds
+    const tableBounds = new THREE.Box3().setFromObject(table);
+    const tableBox = new THREE.Box2(
+      new THREE.Vector2(tableBounds.min.x, tableBounds.min.y),
+      new THREE.Vector2(tableBounds.max.x, tableBounds.max.y)
+    );
+
     //gui for table
     const tableFolder = gui.addFolder("table");
     tableFolder.add(table.position, "x", -5, 5, 0.5);
@@ -88,6 +96,13 @@ export const Scene = () => {
     const sidePanel = new THREE.Mesh(sidePanelGeometry, sidePanelMaterial);
     sidePanel.position.set(-6, 0, 0.1);
     scene.add(sidePanel);
+    // side panel bounds
+    const sidePanelBounds = new THREE.Box3().setFromObject(sidePanel);
+    const sidePanelBox = new THREE.Box2(
+      new THREE.Vector2(sidePanelBounds.min.x, sidePanelBounds.min.y),
+      new THREE.Vector2(sidePanelBounds.max.x, sidePanelBounds.max.y)
+    );
+
     // gui for side panel
     const sidePanelFolder = gui.addFolder("side panel");
     sidePanelFolder.add(sidePanel.position, "x", -10, 10, 1);
@@ -150,13 +165,30 @@ export const Scene = () => {
       console.table({ object: event.object.position, pointer });
       const raycaster = new THREE.Raycaster();
 
-      // if basket
+      // calculate basket box bounds
+      const basketBounds = new THREE.Box3().setFromObject(event.object);
+      const basketBox = new THREE.Box2(
+        new THREE.Vector2(basketBounds.min.x, basketBounds.min.y),
+        new THREE.Vector2(basketBounds.max.x, basketBounds.max.y)
+      );
+
+      raycaster.setFromCamera(pointer, camera);
+      const intersectsTable = raycaster.intersectObject(table);
+      const isCursorOverTable = intersectsTable.length > 0;
+
+      // check if basket is over side panel
+      if (basketBox.intersectsBox(sidePanelBox)) {
+        console.log("basket is over side panel");
+      } else {
+        console.log("basket is not over side panel");
+      }
+
+      // if dragging basket basket
       if (event.object === sidePanelBasket) {
         // check if cursor is over table
-        raycaster.setFromCamera(pointer, camera);
-        const intersects = raycaster.intersectObject(table);
-        if (intersects.length > 0) {
-          const { x, y } = intersects[0].point;
+        if (isCursorOverTable) {
+          const { x, y } = intersectsTable[0].point;
+          console.log({ x, y });
           // create new basket
           const basketGeometry = new THREE.PlaneGeometry(1, 1);
           const basketMaterial = new THREE.MeshBasicMaterial({
@@ -165,8 +197,8 @@ export const Scene = () => {
           const basket = new THREE.Mesh(basketGeometry, basketMaterial);
           basket.position.set(x, y, 0.2);
           scene.add(basket);
-        } else {
         }
+
         event.object.position.set(-6, 2, 0.2);
       }
 
