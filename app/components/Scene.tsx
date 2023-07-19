@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GUI } from "lil-gui";
 import { DragControls } from "three/examples/jsm/controls/DragControls";
+import { createBasket } from "../helpers/threeHelpers";
 
 export const Scene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -161,9 +162,10 @@ export const Scene = () => {
       renderer.domElement
     );
 
+    const allBasketBounds: THREE.Box2[] = [];
+
     dragControls.addEventListener("dragend", (event) => {
       console.table({ object: event.object.position, pointer });
-      const raycaster = new THREE.Raycaster();
 
       // calculate basket box bounds
       const basketBounds = new THREE.Box3().setFromObject(event.object);
@@ -172,39 +174,44 @@ export const Scene = () => {
         new THREE.Vector2(basketBounds.max.x, basketBounds.max.y)
       );
 
+      const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(pointer, camera);
       const intersectsTable = raycaster.intersectObject(table);
+
       const isCursorOverTable = intersectsTable.length > 0;
+      const isBasketOverTable = basketBox.intersectsBox(tableBox);
+      const isBasketOverSidePanel = basketBox.intersectsBox(sidePanelBox);
+      const isDraggingBasket = event.object === sidePanelBasket;
+      const isDraggingApple = event.object === sidePanelApple;
 
-      // check if basket is over side panel
-      if (basketBox.intersectsBox(sidePanelBox)) {
-        console.log("basket is over side panel");
-      } else {
-        console.log("basket is not over side panel");
-      }
-
-      // if dragging basket basket
-      if (event.object === sidePanelBasket) {
-        // check if cursor is over table
-        if (isCursorOverTable) {
+      // if dragging basket
+      if (isDraggingBasket) {
+        // check if cursor is over table and basket not over side panel
+        if (isCursorOverTable && !isBasketOverSidePanel) {
           const { x, y } = intersectsTable[0].point;
-          console.log({ x, y });
-          // create new basket
-          const basketGeometry = new THREE.PlaneGeometry(1, 1);
-          const basketMaterial = new THREE.MeshBasicMaterial({
-            color: "#ff0000",
+          const { basket, basketBounds } = createBasket({
+            x,
+            y,
           });
-          const basket = new THREE.Mesh(basketGeometry, basketMaterial);
-          basket.position.set(x, y, 0.2);
           scene.add(basket);
+          allBasketBounds.push(basketBounds);
         }
 
+        // if basket is intersecting with side panel and cursor is over table
+        if (isCursorOverTable && isBasketOverSidePanel) {
+          // move basket to table
+          const { basket, basketBounds } = createBasket({
+            x: -4,
+            y: event.object.position.y,
+          });
+
+          scene.add(basket);
+          allBasketBounds.push(basketBounds);
+        }
+
+        // reset basket position
         event.object.position.set(-6, 2, 0.2);
       }
-
-      //check if object is over side panel
-
-      // check if object is over another basket
     });
     const animate = function () {
       requestAnimationFrame(animate);
