@@ -1,13 +1,17 @@
 "use client";
 // @refresh reset
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GUI } from "lil-gui";
 import { DragControls } from "three/examples/jsm/controls/DragControls";
 import { createBasket } from "../helpers/threeHelpers";
+import { BasketSizeDialog } from "./BasketSizeDialog";
 
 export const Scene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [renderer, setRenderer] = useState<THREE.WebGLRenderer | null>(null);
+  const [scene, setScene] = useState<THREE.Scene | null>(null);
+  const [basketSizeDialogOpen, setBasketSizeDialogOpen] = useState(false);
 
   useEffect(() => {
     // settings for dat gui
@@ -18,6 +22,7 @@ export const Scene = () => {
       sidePanelColor: "#20692f",
     };
     const gui = new GUI();
+    const boxScaling = 0.02;
 
     const sizes = {
       width: window.innerWidth,
@@ -193,6 +198,7 @@ export const Scene = () => {
             x,
             y,
           });
+          setBasketSizeDialogOpen(true);
           scene.add(basket);
           allBasketBounds.push(basketBounds);
         }
@@ -213,6 +219,10 @@ export const Scene = () => {
         event.object.position.set(-6, 2, 0.2);
       }
     });
+
+    setRenderer(renderer);
+    setScene(scene);
+
     const animate = function () {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
@@ -226,5 +236,24 @@ export const Scene = () => {
     };
   }, []);
 
-  return <div ref={containerRef} />;
+  const handleBasketSizeDialogClose = ({
+    width,
+    height,
+  }: {
+    width: number;
+    height: number;
+  }) => {
+    console.log({ width, height });
+
+    setBasketSizeDialogOpen(false);
+  };
+  return (
+    <>
+      <div ref={containerRef} />
+      <BasketSizeDialog
+        open={basketSizeDialogOpen}
+        onClick={handleBasketSizeDialogClose}
+      />
+    </>
+  );
 };
