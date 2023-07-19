@@ -1,7 +1,23 @@
+import { config } from "../components//Scene";
 import * as THREE from "three";
 
-export const createBasket = ({ x, y }: { x: number; y: number }) => {
-  const basketGeometry = new THREE.PlaneGeometry(1, 1);
+interface BasketProps {}
+
+export const createBasket = ({
+  x,
+  y,
+  width,
+  height,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) => {
+  const basketGeometry = new THREE.PlaneGeometry(
+    width * config.boxScaling,
+    height * config.boxScaling
+  );
   const basketMaterial = new THREE.MeshBasicMaterial({
     color: "#ff0000",
   });
@@ -43,3 +59,5 @@ export const getFreeBasketPosition = ({
     return newBasketBounds;
   }
 };
+
+export const setBasketBoundsOnTable = () => {};

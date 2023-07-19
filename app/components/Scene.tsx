@@ -7,14 +7,23 @@ import { DragControls } from "three/examples/jsm/controls/DragControls";
 import { createBasket } from "../helpers/threeHelpers";
 import { BasketSizeDialog } from "./BasketSizeDialog";
 
+export const config = {
+  boxScaling: 0.02,
+};
+
 export const Scene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+
   const [renderer, setRenderer] = useState<THREE.WebGLRenderer | null>(null);
   const [scene, setScene] = useState<THREE.Scene | null>(null);
+  const [pointer, setPointer] = useState<THREE.Vector2 | null>(null);
+  const [camera, setCamera] = useState<THREE.OrthographicCamera | null>(null);
+
   const [basketSizeDialogOpen, setBasketSizeDialogOpen] = useState(false);
+  const [newBasketPosition, setNewBasketPosition] = useState({ x: 0, y: 0 });
+  const [allBasketBounds, setAllBasketBounds] = useState<THREE.Box2[]>([]);
 
   useEffect(() => {
-    // settings for dat gui
     const settings = {
       zoom: 1,
       fustrumSize: 20,
@@ -22,8 +31,8 @@ export const Scene = () => {
       sidePanelColor: "#20692f",
     };
     const gui = new GUI();
-    const boxScaling = 0.02;
 
+    // set size of canvas
     const sizes = {
       width: window.innerWidth,
       height: window.innerWidth / 1.5,
@@ -31,6 +40,7 @@ export const Scene = () => {
 
     if (!containerRef.current) return;
 
+    // create scene, camera, and renderer
     const frustumSize = 10;
     const scene = new THREE.Scene();
     const aspect = window.innerWidth / (window.innerWidth / 1.5);
@@ -44,6 +54,7 @@ export const Scene = () => {
     );
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(sizes.width, sizes.height);
+    setCamera(camera);
 
     // resize viewport on resize
     const resizeViewport = () => {
@@ -102,6 +113,7 @@ export const Scene = () => {
     const sidePanel = new THREE.Mesh(sidePanelGeometry, sidePanelMaterial);
     sidePanel.position.set(-6, 0, 0.1);
     scene.add(sidePanel);
+
     // side panel bounds
     const sidePanelBounds = new THREE.Box3().setFromObject(sidePanel);
     const sidePanelBox = new THREE.Box2(
@@ -153,12 +165,14 @@ export const Scene = () => {
 
     // add event listener for pointer move
     const pointer = new THREE.Vector2();
+
     function onPointerMove(event: PointerEvent) {
       // calculate pointer position in normalized device coordinates
-
       pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
       pointer.y = -(event.clientY / (window.innerWidth / 1.5)) * 2 + 1;
+      setPointer(pointer);
     }
+
     window.addEventListener("pointermove", onPointerMove);
 
     const dragControls = new DragControls(
@@ -167,11 +181,7 @@ export const Scene = () => {
       renderer.domElement
     );
 
-    const allBasketBounds: THREE.Box2[] = [];
-
     dragControls.addEventListener("dragend", (event) => {
-      console.table({ object: event.object.position, pointer });
-
       // calculate basket box bounds
       const basketBounds = new THREE.Box3().setFromObject(event.object);
       const basketBox = new THREE.Box2(
@@ -190,34 +200,13 @@ export const Scene = () => {
       const isDraggingApple = event.object === sidePanelApple;
 
       // if dragging basket
-      if (isDraggingBasket) {
-        // check if cursor is over table and basket not over side panel
-        if (isCursorOverTable && !isBasketOverSidePanel) {
-          const { x, y } = intersectsTable[0].point;
-          const { basket, basketBounds } = createBasket({
-            x,
-            y,
-          });
-          setBasketSizeDialogOpen(true);
-          scene.add(basket);
-          allBasketBounds.push(basketBounds);
-        }
-
-        // if basket is intersecting with side panel and cursor is over table
-        if (isCursorOverTable && isBasketOverSidePanel) {
-          // move basket to table
-          const { basket, basketBounds } = createBasket({
-            x: -4,
-            y: event.object.position.y,
-          });
-
-          scene.add(basket);
-          allBasketBounds.push(basketBounds);
-        }
-
-        // reset basket position
-        event.object.position.set(-6, 2, 0.2);
+      if (isDraggingBasket && isCursorOverTable) {
+        const { x, y } = intersectsTable[0].point;
+        setNewBasketPosition({ x, y });
+        setBasketSizeDialogOpen(true);
       }
+      // reset basket position
+      event.object.position.set(-6, 2, 0.2);
     });
 
     setRenderer(renderer);
@@ -243,8 +232,6 @@ export const Scene = () => {
     width: number;
     height: number;
   }) => {
-    console.log({ width, height });
-
     setBasketSizeDialogOpen(false);
   };
   return (
