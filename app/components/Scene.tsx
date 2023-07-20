@@ -65,6 +65,7 @@ export const Scene = () => {
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(sizes.width, sizes.height);
     setCamera(camera);
+    camera.position.z = 1;
 
     // resize viewport on resize
     const resizeViewport = () => {
@@ -103,13 +104,6 @@ export const Scene = () => {
     sidePanel.position.set(-6, 0, 0.1);
     scene.add(sidePanel);
 
-    // side panel bounds
-    const sidePanelBounds = new THREE.Box3().setFromObject(sidePanel);
-    const sidePanelBox = new THREE.Box2(
-      new THREE.Vector2(sidePanelBounds.min.x, sidePanelBounds.min.y),
-      new THREE.Vector2(sidePanelBounds.max.x, sidePanelBounds.max.y)
-    );
-
     // add side panel basket to scene
     const sidePanelBasketGeometry = new THREE.PlaneGeometry(1, 1);
     const sidePanelBasketMaterial = new THREE.MeshBasicMaterial({
@@ -134,16 +128,13 @@ export const Scene = () => {
     sidePanelApple.position.set(-6, 0, 0.3);
     scene.add(sidePanelApple);
 
-    // set camera position
-    camera.position.z = 1;
-
     // create draggable objects
     const draggableObjects: THREE.Object3D[] = [
       sidePanelBasket,
       sidePanelApple,
     ];
 
-    // add event listener for pointer move
+    // update pointer state on pointer move
     const pointer = new THREE.Vector2();
 
     function onPointerMove(event: PointerEvent) {
@@ -155,6 +146,7 @@ export const Scene = () => {
 
     window.addEventListener("pointermove", onPointerMove);
 
+    // add drag controls
     const dragControls = new DragControls(
       draggableObjects,
       camera,
@@ -217,10 +209,8 @@ export const Scene = () => {
             alert("Basket is full!");
             return;
           }
-
           newApple.position.set(applePosition.x, applePosition.y, 0.4);
 
-          // add apple to basket
           intersectedBasket.add(newApple);
         }
       }
@@ -303,12 +293,15 @@ export const Scene = () => {
     setBasketSizeDialogOpen(false);
   };
   return (
-    <>
+    <div className="relative">
       <div ref={containerRef} />
       <BasketSizeDialog
         open={basketSizeDialogOpen}
         onClose={handleBasketSizeDialogClose}
       />
-    </>
+      <button className="absolute left-[8%] top-2/3 rounded border border-gray-800 bg-gray-200 p-2">
+        Sort
+      </button>
+    </div>
   );
 };
