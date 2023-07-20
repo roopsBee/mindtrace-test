@@ -184,19 +184,22 @@ export const Scene = () => {
         const raycasterOverBaskets = raycaster.intersectObjects(
           basketObjectsRef.current
         );
-        if (raycasterOverBaskets.length > 0) {
-          const intersectedBasket = raycasterOverBaskets[0]
-            .object as THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
 
-          const basketArea =
-            intersectedBasket.geometry.parameters.width *
-            intersectedBasket.geometry.parameters.height;
+        // filter out other apple meshes from raycaster
+        const raycasterOverBasketsFiltered = raycasterOverBaskets.filter(
+          (intersectedBasket) => intersectedBasket.object.name !== "apple"
+        );
+
+        if (raycasterOverBasketsFiltered.length > 0) {
+          const intersectedBasket = raycasterOverBasketsFiltered[0]
+            .object as THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
 
           //add circle to basket
           const newApple = new THREE.Mesh(
             new THREE.CircleGeometry(config.circleRadius, 32),
             new THREE.MeshBasicMaterial({ color: "#0000ff" })
           );
+          newApple.name = "apple";
 
           //update basket state
           const basketIndex = basketObjectsRef.current.findIndex(
@@ -205,13 +208,15 @@ export const Scene = () => {
           basketObjectsStateRef.current[basketIndex].apples += 1;
 
           // position apple in basket
-
           const applePosition = getApplePositionInBasket({
             basketState: basketObjectsStateRef.current[basketIndex],
           });
-          console.log(applePosition);
 
-          if (!applePosition) return;
+          if (!applePosition) {
+            event.object.position.set(-6, 0, 0.2);
+            alert("Basket is full!");
+            return;
+          }
 
           newApple.position.set(applePosition.x, applePosition.y, 0.4);
 

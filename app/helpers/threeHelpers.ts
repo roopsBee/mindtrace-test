@@ -79,7 +79,6 @@ export const getApplePositionInBasket = ({
 
   // If the row exceeds the maximum number of rows, the basket is full
   if (row >= applesPerColumn) {
-    console.log("The basket is full");
     return false;
   }
 
