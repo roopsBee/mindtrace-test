@@ -7,6 +7,7 @@ import {
   createBasket,
   setBasketBoundsOnTable,
   isBasketOnAnyBasket,
+  getApplePositionInBasket,
 } from "../helpers/threeHelpers";
 
 import { BasketSizeDialog } from "./BasketSizeDialog";
@@ -16,6 +17,14 @@ export const config = {
   maxBaskets: 50,
   circleRadius: 2.5 * 0.02,
 };
+
+export interface BasketState {
+  apples: number;
+  uuid: string;
+  maxApples: number;
+  width: number;
+  height: number;
+}
 
 export const Scene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,9 +37,7 @@ export const Scene = () => {
   const [basketSizeDialogOpen, setBasketSizeDialogOpen] = useState(false);
   const [newBasketPosition, setNewBasketPosition] = useState({ x: 0, y: 0 });
   const basketObjectsRef = useRef<THREE.Object3D[]>([]);
-  const basketObjectsStateRef = useRef<
-    { apples: number; uuid: string; maxApples: number }[]
-  >([]);
+  const basketObjectsStateRef = useRef<BasketState[]>([]);
   const [allBasketBounds, setAllBasketBounds] = useState<THREE.Box2[]>([]);
   const [tableBounds, setTableBounds] = useState<THREE.Box2>(new THREE.Box2());
 
@@ -197,6 +204,17 @@ export const Scene = () => {
           );
           basketObjectsStateRef.current[basketIndex].apples += 1;
 
+          // position apple in basket
+
+          const applePosition = getApplePositionInBasket({
+            basketState: basketObjectsStateRef.current[basketIndex],
+          });
+          console.log(applePosition);
+
+          if (!applePosition) return;
+
+          newApple.position.set(applePosition.x, applePosition.y, 0.4);
+
           // add apple to basket
           intersectedBasket.add(newApple);
         }
@@ -273,6 +291,8 @@ export const Scene = () => {
       uuid: basket.uuid,
       apples: 0,
       maxApples,
+      width,
+      height,
     });
     setAllBasketBounds((state) => [...state, movedBasketBounds]);
     setBasketSizeDialogOpen(false);
