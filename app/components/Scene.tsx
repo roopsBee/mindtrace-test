@@ -14,6 +14,7 @@ import { BasketSizeDialog } from "./BasketSizeDialog";
 export const config = {
   boxScaling: 0.02,
   maxBaskets: 50,
+  circleRadius: 2.5 * 0.02,
 };
 
 export const Scene = () => {
@@ -26,6 +27,10 @@ export const Scene = () => {
 
   const [basketSizeDialogOpen, setBasketSizeDialogOpen] = useState(false);
   const [newBasketPosition, setNewBasketPosition] = useState({ x: 0, y: 0 });
+  const basketObjectsRef = useRef<THREE.Object3D[]>([]);
+  const basketObjectsStateRef = useRef<
+    { apples: number; uuid: string; maxApples: number }[]
+  >([]);
   const [allBasketBounds, setAllBasketBounds] = useState<THREE.Box2[]>([]);
   const [tableBounds, setTableBounds] = useState<THREE.Box2>(new THREE.Box2());
 
@@ -111,7 +116,7 @@ export const Scene = () => {
     scene.add(sidePanelBasket);
 
     // add side panel apple to scene
-    const sidePanelAppleGeometry = new THREE.CircleGeometry(0.5, 32);
+    const sidePanelAppleGeometry = new THREE.CircleGeometry(0.25, 32);
     const sidePanelAppleMaterial = new THREE.MeshBasicMaterial({
       color: "#0000ff",
     });
@@ -119,7 +124,7 @@ export const Scene = () => {
       sidePanelAppleGeometry,
       sidePanelAppleMaterial
     );
-    sidePanelApple.position.set(-6, 0, 0.2);
+    sidePanelApple.position.set(-6, 0, 0.3);
     scene.add(sidePanelApple);
 
     // set camera position
@@ -168,11 +173,38 @@ export const Scene = () => {
 
       //check if dragging apple and over basket
       if (isDraggingApple) {
-        // check if cursor is over basket
+        raycaster.setFromCamera(pointer, camera);
+        const raycasterOverBaskets = raycaster.intersectObjects(
+          basketObjectsRef.current
+        );
+        if (raycasterOverBaskets.length > 0) {
+          const intersectedBasket = raycasterOverBaskets[0]
+            .object as THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+
+          const basketArea =
+            intersectedBasket.geometry.parameters.width *
+            intersectedBasket.geometry.parameters.height;
+
+          //add circle to basket
+          const newApple = new THREE.Mesh(
+            new THREE.CircleGeometry(config.circleRadius, 32),
+            new THREE.MeshBasicMaterial({ color: "#0000ff" })
+          );
+
+          //update basket state
+          const basketIndex = basketObjectsRef.current.findIndex(
+            (basket) => basket.uuid === intersectedBasket.uuid
+          );
+          basketObjectsStateRef.current[basketIndex].apples += 1;
+
+          // add apple to basket
+          intersectedBasket.add(newApple);
+        }
       }
 
-      // reset basket position
-      event.object.position.set(-6, 2, 0.2);
+      // reset basket and apple position
+      if (isDraggingBasket) event.object.position.set(-6, 2, 0.2);
+      if (isDraggingApple) event.object.position.set(-6, 0, 0.2);
     });
 
     setRenderer(renderer);
@@ -227,12 +259,21 @@ export const Scene = () => {
       return;
     }
 
-    // get center of bounds - as position of the basket object is center based
     const centerBounds = movedBasketBounds.getCenter(new THREE.Vector2());
     basket.position.set(centerBounds.x, centerBounds.y, 0.2);
-
     sceneRef.current?.add(basket);
 
+    // calculate max apples a basket can hold
+    basketObjectsRef.current.push(basket);
+    const appleBox = (2.5 * 2) ** 2;
+    const maxApples = (width * height) / appleBox;
+
+    // set basket state
+    basketObjectsStateRef.current.push({
+      uuid: basket.uuid,
+      apples: 0,
+      maxApples,
+    });
     setAllBasketBounds((state) => [...state, movedBasketBounds]);
     setBasketSizeDialogOpen(false);
   };
