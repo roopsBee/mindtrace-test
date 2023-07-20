@@ -30,13 +30,6 @@ export const Scene = () => {
   const [tableBounds, setTableBounds] = useState<THREE.Box2>(new THREE.Box2());
 
   useEffect(() => {
-    const settings = {
-      zoom: 1,
-      fustrumSize: 20,
-      tableColor: "#130f52",
-      sidePanelColor: "#20692f",
-    };
-
     // set size of canvas
     const sizes = {
       width: window.innerWidth,
@@ -157,30 +150,27 @@ export const Scene = () => {
     );
 
     dragControls.addEventListener("dragend", (event) => {
-      // calculate basket box bounds
-      const basketBounds = new THREE.Box3().setFromObject(event.object);
-      const basketBox = new THREE.Box2(
-        new THREE.Vector2(basketBounds.min.x, basketBounds.min.y),
-        new THREE.Vector2(basketBounds.max.x, basketBounds.max.y)
-      );
-
+      // use raycaster to check if cursor is over table
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(pointer, camera);
       const intersectsTable = raycaster.intersectObject(table);
-
       const isCursorOverTable = intersectsTable.length > 0;
-      const isBasketOverTable = basketBox.intersectsBox(tableBox);
-      const isBasketOverSidePanel = basketBox.intersectsBox(sidePanelBox);
+
       const isDraggingBasket = event.object === sidePanelBasket;
       const isDraggingApple = event.object === sidePanelApple;
 
+      // check if dragging basket and over table
       if (isDraggingBasket && isCursorOverTable) {
-        // check if max baskets reached
-
         const { x, y } = intersectsTable[0].point;
         setNewBasketPosition({ x, y });
         setBasketSizeDialogOpen(true);
       }
+
+      //check if dragging apple and over basket
+      if (isDraggingApple) {
+        // check if cursor is over basket
+      }
+
       // reset basket position
       event.object.position.set(-6, 2, 0.2);
     });
