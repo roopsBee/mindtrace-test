@@ -36,7 +36,9 @@ export const Scene = () => {
 
   const [basketSizeDialogOpen, setBasketSizeDialogOpen] = useState(false);
   const [newBasketPosition, setNewBasketPosition] = useState({ x: 0, y: 0 });
-  const basketObjectsRef = useRef<THREE.Object3D[]>([]);
+  const basketObjectsRef = useRef<
+    THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[]
+  >([]);
   const basketObjectsStateRef = useRef<BasketState[]>([]);
   const [allBasketBounds, setAllBasketBounds] = useState<THREE.Box2[]>([]);
   const [tableBounds, setTableBounds] = useState<THREE.Box2>(new THREE.Box2());
@@ -183,8 +185,7 @@ export const Scene = () => {
         );
 
         if (raycasterOverBasketsFiltered.length > 0) {
-          const intersectedBasket = raycasterOverBasketsFiltered[0]
-            .object as THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+          const intersectedBasket = raycasterOverBasketsFiltered[0].object;
 
           //add circle to basket
           const newApple = new THREE.Mesh(
@@ -209,6 +210,7 @@ export const Scene = () => {
             alert("Basket is full!");
             return;
           }
+
           newApple.position.set(applePosition.x, applePosition.y, 0.4);
 
           intersectedBasket.add(newApple);
@@ -243,6 +245,7 @@ export const Scene = () => {
     width: number;
     height: number;
   }) => {
+    // check if max baskets reached
     if (allBasketBounds.length === config.maxBaskets) {
       alert("You have too many baskets");
       setBasketSizeDialogOpen(false);
@@ -292,6 +295,50 @@ export const Scene = () => {
     setAllBasketBounds((state) => [...state, movedBasketBounds]);
     setBasketSizeDialogOpen(false);
   };
+
+  const handleSort = () => {
+    // get ordered list of baskets based on apples
+    console.log(basketObjectsRef.current);
+
+    // sort baskets by number of apples
+    const sortedBaskets = basketObjectsRef.current.sort((a, b) => {
+      const applesInBasketA = a.children.length;
+      const applesInBasketB = b.children.length;
+      return applesInBasketB - applesInBasketA;
+    });
+
+    console.log({ sortedBaskets, tableBounds });
+    // reposition baskets is order
+    let nextX = tableBounds.min.x;
+    let nextY = tableBounds.max.y;
+    const gap = 0.05;
+    const rowEndX = tableBounds.max.x;
+
+    sortedBaskets.forEach((basket, index) => {
+      const basketWidth = basket.geometry.parameters.width;
+      const basketHeight = basket.geometry.parameters.height;
+      const basketXmin = basket.position.x - basketWidth / 2;
+      const basketYmin = basket.position.y + basketHeight / 2;
+      const basketXmax = basket.position.x + basketWidth / 2;
+      const basketYmax = basket.position.y - basketHeight / 2;
+
+      const newBasketPosition = new THREE.Vector3(
+        nextX + basketWidth / 2,
+        nextY - basketHeight / 2
+      );
+
+      // if basket is out of bounds, move to next row
+      if (newBasketPosition.x + basketWidth / 2 + gap > rowEndX) {
+        nextX = tableBounds.min.x;
+        nextY -= 70 * config.boxScaling + gap;
+      }
+
+      basket.position.set(newBasketPosition.x, newBasketPosition.y, 0.2);
+      // update basket bounds
+
+      nextX += basketWidth + gap;
+    });
+  };
   return (
     <div className="relative">
       <div ref={containerRef} />
@@ -299,7 +346,10 @@ export const Scene = () => {
         open={basketSizeDialogOpen}
         onClose={handleBasketSizeDialogClose}
       />
-      <button className="absolute left-[8%] top-2/3 rounded border border-gray-800 bg-gray-200 p-2">
+      <button
+        onClick={handleSort}
+        className="absolute left-[8%] top-2/3 rounded border border-gray-800 bg-gray-200 p-2"
+      >
         Sort
       </button>
     </div>
