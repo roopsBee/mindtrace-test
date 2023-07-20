@@ -2,7 +2,6 @@
 // @refresh reset
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { GUI } from "lil-gui";
 import { DragControls } from "three/examples/jsm/controls/DragControls";
 import {
   createBasket,
@@ -37,7 +36,6 @@ export const Scene = () => {
       tableColor: "#130f52",
       sidePanelColor: "#20692f",
     };
-    const gui = new GUI();
 
     // set size of canvas
     const sizes = {
@@ -74,20 +72,6 @@ export const Scene = () => {
 
     window.addEventListener("resize", resizeViewport);
 
-    // gui for zoom
-    gui.add(settings, "zoom", 0, 3, 0.1).onChange((value: number) => {
-      camera.zoom = value;
-      camera.updateProjectionMatrix();
-    });
-
-    // gui for fustrum size
-    gui.add(settings, "fustrumSize", 0, 50, 1).onChange((value: number) => {
-      camera.left = (value * aspect) / -2;
-      camera.right = (value * aspect) / 2;
-      camera.top = value / 2;
-      camera.bottom = value / -2;
-      camera.updateProjectionMatrix();
-    });
     // append canvas to div
     containerRef?.current.appendChild(renderer.domElement);
 
@@ -107,15 +91,6 @@ export const Scene = () => {
 
     setTableBounds(tableBox);
 
-    //gui for table
-    const tableFolder = gui.addFolder("table");
-    tableFolder.add(table.position, "x", -5, 5, 0.5);
-    tableFolder.add(table.position, "y", -10, 10, 1);
-    tableFolder.add(table.position, "z", -1, 1, 0.1);
-    tableFolder.addColor(settings, "tableColor").onChange(() => {
-      table.material.color.set(settings.tableColor);
-    });
-
     // add side panel to scene
     const sidePanelGeometry = new THREE.PlaneGeometry(3, 10);
     const sidePanelMaterial = new THREE.MeshBasicMaterial({ color: "#20692f" });
@@ -129,15 +104,6 @@ export const Scene = () => {
       new THREE.Vector2(sidePanelBounds.min.x, sidePanelBounds.min.y),
       new THREE.Vector2(sidePanelBounds.max.x, sidePanelBounds.max.y)
     );
-
-    // gui for side panel
-    const sidePanelFolder = gui.addFolder("side panel");
-    sidePanelFolder.add(sidePanel.position, "x", -10, 10, 1);
-    sidePanelFolder.add(sidePanel.position, "y", -10, 10, 1);
-    sidePanelFolder.add(sidePanel.position, "z", -1, 1, 0.1);
-    sidePanelFolder.addColor(settings, "sidePanelColor").onChange(() => {
-      sidePanel.material.color.set(settings.sidePanelColor);
-    });
 
     // add side panel basket to scene
     const sidePanelBasketGeometry = new THREE.PlaneGeometry(1, 1);
