@@ -1,8 +1,6 @@
 import { config } from "../components//Scene";
 import * as THREE from "three";
 
-interface BasketProps {}
-
 export const createBasket = ({
   x,
   y,
@@ -60,4 +58,28 @@ export const getFreeBasketPosition = ({
   }
 };
 
-export const setBasketBoundsOnTable = () => {};
+export const setBasketBoundsOnTable = ({
+  tableBounds,
+  basketBounds,
+}: {
+  tableBounds: THREE.Box2;
+  basketBounds: THREE.Box2;
+}) => {
+  let newBasketBounds = basketBounds;
+  if (basketBounds.min.x < tableBounds.min.x) {
+    // basketBounds.intersect(tableBounds);
+  }
+  if (basketBounds.max.x > tableBounds.max.x) {
+    // basketBounds.intersect(tableBounds);
+  }
+  if (basketBounds.min.y < tableBounds.min.y) {
+    // newBasketBounds = basketBounds.intersect(tableBounds);
+  }
+  if (basketBounds.max.y > tableBounds.max.y) {
+    // newBasketBounds = basketBounds.intersect(tableBounds);
+  }
+
+  newBasketBounds = basketBounds.intersect(tableBounds);
+
+  return newBasketBounds;
+};

@@ -6,8 +6,8 @@ interface Props {
 }
 
 export const BasketSizeDialog: React.FC<Props> = ({ open, onClose }) => {
-  const [width, setWidth] = useState(10);
-  const [height, setHeight] = useState(10);
+  const [width, setWidth] = useState(70);
+  const [height, setHeight] = useState(70);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

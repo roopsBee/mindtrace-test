@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GUI } from "lil-gui";
 import { DragControls } from "three/examples/jsm/controls/DragControls";
-import { createBasket } from "../helpers/threeHelpers";
+import { createBasket, setBasketBoundsOnTable } from "../helpers/threeHelpers";
 import { BasketSizeDialog } from "./BasketSizeDialog";
 
 export const config = {
@@ -22,6 +22,7 @@ export const Scene = () => {
   const [basketSizeDialogOpen, setBasketSizeDialogOpen] = useState(false);
   const [newBasketPosition, setNewBasketPosition] = useState({ x: 0, y: 0 });
   const [allBasketBounds, setAllBasketBounds] = useState<THREE.Box2[]>([]);
+  const [tableBounds, setTableBounds] = useState<THREE.Box2>(new THREE.Box2());
 
   useEffect(() => {
     const settings = {
@@ -97,6 +98,8 @@ export const Scene = () => {
       new THREE.Vector2(tableBounds.min.x, tableBounds.min.y),
       new THREE.Vector2(tableBounds.max.x, tableBounds.max.y)
     );
+
+    setTableBounds(tableBox);
 
     //gui for table
     const tableFolder = gui.addFolder("table");
@@ -238,9 +241,16 @@ export const Scene = () => {
       x: newBasketPosition.x,
       y: newBasketPosition.y,
     });
-    sceneRef.current?.add(basket);
-    setAllBasketBounds((state) => [...state, basketBounds]);
 
+    const movedBasketBounds = setBasketBoundsOnTable({
+      basketBounds,
+      tableBounds,
+    });
+
+    basket.position.set(movedBasketBounds.min.x, movedBasketBounds.min.y, 0.2);
+    sceneRef.current?.add(basket);
+
+    setAllBasketBounds((state) => [...state, movedBasketBounds]);
     setBasketSizeDialogOpen(false);
   };
   return (
