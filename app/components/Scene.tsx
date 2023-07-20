@@ -9,6 +9,7 @@ import {
   isBasketOnAnyBasket,
   getApplePositionInBasket,
   createBasketBounds,
+  sortBasketsByNumberOfApples,
 } from "../helpers/threeHelpers";
 
 import { BasketSizeDialog } from "./BasketSizeDialog";
@@ -62,6 +63,7 @@ export const Scene = () => {
       0.1,
       100
     );
+
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(sizes.width, sizes.height);
     camera.position.z = 1;
@@ -183,12 +185,7 @@ export const Scene = () => {
         if (raycasterOverBasketsFiltered.length > 0) {
           const intersectedBasket = raycasterOverBasketsFiltered[0].object;
 
-          //add circle to basket
-          const newApple = new THREE.Mesh(
-            new THREE.CircleGeometry(config.circleRadius, 32),
-            new THREE.MeshBasicMaterial({ color: "#0000ff" })
-          );
-          newApple.name = "apple";
+          //add apple to basket
 
           //update basket state
           const basketIndex = basketObjectsRef.current.findIndex(
@@ -207,6 +204,11 @@ export const Scene = () => {
             return;
           }
 
+          const newApple = new THREE.Mesh(
+            new THREE.CircleGeometry(config.circleRadius, 32),
+            new THREE.MeshBasicMaterial({ color: "#0000ff" })
+          );
+          newApple.name = "apple";
           newApple.position.set(applePosition.x, applePosition.y, 0.4);
           intersectedBasket.add(newApple);
         }
@@ -300,33 +302,7 @@ export const Scene = () => {
       return applesInBasketB - applesInBasketA;
     });
 
-    // reposition baskets is order
-    let nextX = tableBounds.min.x;
-    let nextY = tableBounds.max.y;
-    const gap = 0.05;
-    const rowEndX = tableBounds.max.x;
-
-    sortedBaskets.forEach((basket) => {
-      const basketWidth = basket.geometry.parameters.width;
-      const basketHeight = basket.geometry.parameters.height;
-
-      const newBasketPosition = new THREE.Vector3(
-        nextX + basketWidth / 2,
-        nextY - basketHeight / 2
-      );
-
-      // if basket is out of bounds, move to next row
-      if (newBasketPosition.x + basketWidth / 2 + gap > rowEndX) {
-        nextX = tableBounds.min.x;
-        nextY -= 70 * config.boxScaling + gap;
-        newBasketPosition.x = nextX + basketWidth / 2;
-        newBasketPosition.y = nextY - basketHeight / 2;
-      }
-
-      basket.position.set(newBasketPosition.x, newBasketPosition.y, 0.2);
-
-      nextX += basketWidth + gap;
-    });
+    sortBasketsByNumberOfApples({ sortedBaskets, tableBounds });
 
     // update basket bounds
     const newAllBounds = allBasketBounds.map((basketBounds, index) => {

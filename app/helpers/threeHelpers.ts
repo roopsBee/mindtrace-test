@@ -98,3 +98,39 @@ export const getApplePositionInBasket = ({
   console.log("apple x", x, "y", y);
   return new THREE.Vector3(x, y, 0);
 };
+
+export const sortBasketsByNumberOfApples = ({
+  sortedBaskets,
+  tableBounds,
+}: {
+  sortedBaskets: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[];
+  tableBounds: THREE.Box2;
+}) => {
+  // reposition baskets is order
+  let nextX = tableBounds.min.x;
+  let nextY = tableBounds.max.y;
+  const gap = 0.05;
+  const rowEndX = tableBounds.max.x;
+
+  sortedBaskets.forEach((basket) => {
+    const basketWidth = basket.geometry.parameters.width;
+    const basketHeight = basket.geometry.parameters.height;
+
+    const newBasketPosition = new THREE.Vector3(
+      nextX + basketWidth / 2,
+      nextY - basketHeight / 2
+    );
+
+    // if basket is out of bounds, move to next row
+    if (newBasketPosition.x + basketWidth / 2 + gap > rowEndX) {
+      nextX = tableBounds.min.x;
+      nextY -= 70 * config.boxScaling + gap;
+      newBasketPosition.x = nextX + basketWidth / 2;
+      newBasketPosition.y = nextY - basketHeight / 2;
+    }
+
+    basket.position.set(newBasketPosition.x, newBasketPosition.y, 0.2);
+
+    nextX += basketWidth + gap;
+  });
+};
