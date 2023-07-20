@@ -20,15 +20,24 @@ export const createBasket = ({
     color: "#ff0000",
   });
   const basket = new THREE.Mesh(basketGeometry, basketMaterial);
+  basket.name = "basket";
 
   basket.position.set(x, y, 0.2);
 
+  return basket;
+};
+
+export const createBasketBounds = ({
+  basket,
+}: {
+  basket: THREE.Mesh;
+}): THREE.Box2 => {
   const basketBounds3d = new THREE.Box3().setFromObject(basket);
   const basketBounds2d = new THREE.Box2(
     new THREE.Vector2(basketBounds3d.min.x, basketBounds3d.min.y),
     new THREE.Vector2(basketBounds3d.max.x, basketBounds3d.max.y)
   );
-  return { basket, basketBounds: basketBounds2d };
+  return basketBounds2d;
 };
 
 export const isBasketOnAnyBasket = ({
@@ -86,5 +95,6 @@ export const getApplePositionInBasket = ({
   let x = startX + column * 2 * appleRadius;
   let y = startY - row * 2 * appleRadius;
 
+  console.log("apple x", x, "y", y);
   return new THREE.Vector3(x, y, 0);
 };

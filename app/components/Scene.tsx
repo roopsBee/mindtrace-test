@@ -8,6 +8,7 @@ import {
   setBasketBoundsOnTable,
   isBasketOnAnyBasket,
   getApplePositionInBasket,
+  createBasketBounds,
 } from "../helpers/threeHelpers";
 
 import { BasketSizeDialog } from "./BasketSizeDialog";
@@ -29,10 +30,7 @@ export interface BasketState {
 export const Scene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [renderer, setRenderer] = useState<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
-  const [pointer, setPointer] = useState<THREE.Vector2 | null>(null);
-  const [camera, setCamera] = useState<THREE.OrthographicCamera | null>(null);
 
   const [basketSizeDialogOpen, setBasketSizeDialogOpen] = useState(false);
   const [newBasketPosition, setNewBasketPosition] = useState({ x: 0, y: 0 });
@@ -66,7 +64,6 @@ export const Scene = () => {
     );
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(sizes.width, sizes.height);
-    setCamera(camera);
     camera.position.z = 1;
 
     // resize viewport on resize
@@ -143,7 +140,6 @@ export const Scene = () => {
       // calculate pointer position in normalized device coordinates
       pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
       pointer.y = -(event.clientY / (window.innerWidth / 1.5)) * 2 + 1;
-      setPointer(pointer);
     }
 
     window.addEventListener("pointermove", onPointerMove);
@@ -212,7 +208,6 @@ export const Scene = () => {
           }
 
           newApple.position.set(applePosition.x, applePosition.y, 0.4);
-
           intersectedBasket.add(newApple);
         }
       }
@@ -222,7 +217,6 @@ export const Scene = () => {
       if (isDraggingApple) event.object.position.set(-6, 0, 0.2);
     });
 
-    setRenderer(renderer);
     sceneRef.current = scene;
 
     const animate = function () {
@@ -252,12 +246,14 @@ export const Scene = () => {
       return;
     }
 
-    const { basket, basketBounds } = createBasket({
+    const basket = createBasket({
       width,
       height,
       x: newBasketPosition.x,
       y: newBasketPosition.y,
     });
+
+    const basketBounds = createBasketBounds({ basket });
 
     const movedBasketBounds = setBasketBoundsOnTable({
       basketBounds,
@@ -297,30 +293,22 @@ export const Scene = () => {
   };
 
   const handleSort = () => {
-    // get ordered list of baskets based on apples
-    console.log(basketObjectsRef.current);
-
     // sort baskets by number of apples
-    const sortedBaskets = basketObjectsRef.current.sort((a, b) => {
+    const sortedBaskets = basketObjectsRef.current.toSorted((a, b) => {
       const applesInBasketA = a.children.length;
       const applesInBasketB = b.children.length;
       return applesInBasketB - applesInBasketA;
     });
 
-    console.log({ sortedBaskets, tableBounds });
     // reposition baskets is order
     let nextX = tableBounds.min.x;
     let nextY = tableBounds.max.y;
     const gap = 0.05;
     const rowEndX = tableBounds.max.x;
 
-    sortedBaskets.forEach((basket, index) => {
+    sortedBaskets.forEach((basket) => {
       const basketWidth = basket.geometry.parameters.width;
       const basketHeight = basket.geometry.parameters.height;
-      const basketXmin = basket.position.x - basketWidth / 2;
-      const basketYmin = basket.position.y + basketHeight / 2;
-      const basketXmax = basket.position.x + basketWidth / 2;
-      const basketYmax = basket.position.y - basketHeight / 2;
 
       const newBasketPosition = new THREE.Vector3(
         nextX + basketWidth / 2,
@@ -331,13 +319,22 @@ export const Scene = () => {
       if (newBasketPosition.x + basketWidth / 2 + gap > rowEndX) {
         nextX = tableBounds.min.x;
         nextY -= 70 * config.boxScaling + gap;
+        newBasketPosition.x = nextX + basketWidth / 2;
+        newBasketPosition.y = nextY - basketHeight / 2;
       }
 
       basket.position.set(newBasketPosition.x, newBasketPosition.y, 0.2);
-      // update basket bounds
 
       nextX += basketWidth + gap;
     });
+
+    // update basket bounds
+    const newAllBounds = allBasketBounds.map((basketBounds, index) => {
+      const basketObject = basketObjectsRef.current[index];
+      const newBasketBounds = createBasketBounds({ basket: basketObject });
+      return newBasketBounds;
+    });
+    setAllBasketBounds(newAllBounds);
   };
   return (
     <div className="relative">
