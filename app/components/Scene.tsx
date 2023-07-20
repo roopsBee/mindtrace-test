@@ -15,7 +15,7 @@ export const Scene = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [renderer, setRenderer] = useState<THREE.WebGLRenderer | null>(null);
-  const [scene, setScene] = useState<THREE.Scene | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
   const [pointer, setPointer] = useState<THREE.Vector2 | null>(null);
   const [camera, setCamera] = useState<THREE.OrthographicCamera | null>(null);
 
@@ -210,7 +210,7 @@ export const Scene = () => {
     });
 
     setRenderer(renderer);
-    setScene(scene);
+    sceneRef.current = scene;
 
     const animate = function () {
       requestAnimationFrame(animate);
@@ -238,7 +238,7 @@ export const Scene = () => {
       x: newBasketPosition.x,
       y: newBasketPosition.y,
     });
-    scene?.add(basket);
+    sceneRef.current?.add(basket);
     setAllBasketBounds((state) => [...state, basketBounds]);
 
     setBasketSizeDialogOpen(false);
