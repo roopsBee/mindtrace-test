@@ -9,7 +9,7 @@ import {
   isBasketOnAnyBasket,
   getApplePositionInBasket,
   createBasketBounds,
-  sortBasketsByNumberOfApples,
+  positionBasketsByNumberOfApples,
 } from "../helpers/threeHelpers";
 
 import { BasketSizeDialog } from "./BasketSizeDialog";
@@ -302,10 +302,10 @@ export const Scene = () => {
       return applesInBasketB - applesInBasketA;
     });
 
-    sortBasketsByNumberOfApples({ sortedBaskets, tableBounds });
+    positionBasketsByNumberOfApples({ sortedBaskets, tableBounds });
 
     // update basket bounds
-    const newAllBounds = allBasketBounds.map((basketBounds, index) => {
+    const newAllBounds = allBasketBounds.map((_, index) => {
       const basketObject = basketObjectsRef.current[index];
       const newBasketBounds = createBasketBounds({ basket: basketObject });
       return newBasketBounds;

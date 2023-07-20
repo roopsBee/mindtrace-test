@@ -99,7 +99,7 @@ export const getApplePositionInBasket = ({
   return new THREE.Vector3(x, y, 0);
 };
 
-export const sortBasketsByNumberOfApples = ({
+export const positionBasketsByNumberOfApples = ({
   sortedBaskets,
   tableBounds,
 }: {
