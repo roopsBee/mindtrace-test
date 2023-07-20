@@ -4,11 +4,17 @@ import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GUI } from "lil-gui";
 import { DragControls } from "three/examples/jsm/controls/DragControls";
-import { createBasket, setBasketBoundsOnTable } from "../helpers/threeHelpers";
+import {
+  createBasket,
+  setBasketBoundsOnTable,
+  isBasketOnAnyBasket,
+} from "../helpers/threeHelpers";
+
 import { BasketSizeDialog } from "./BasketSizeDialog";
 
 export const config = {
   boxScaling: 0.02,
+  maxBaskets: 50,
 };
 
 export const Scene = () => {
@@ -202,8 +208,9 @@ export const Scene = () => {
       const isDraggingBasket = event.object === sidePanelBasket;
       const isDraggingApple = event.object === sidePanelApple;
 
-      // if dragging basket
       if (isDraggingBasket && isCursorOverTable) {
+        // check if max baskets reached
+
         const { x, y } = intersectsTable[0].point;
         setNewBasketPosition({ x, y });
         setBasketSizeDialogOpen(true);
@@ -235,6 +242,12 @@ export const Scene = () => {
     width: number;
     height: number;
   }) => {
+    if (allBasketBounds.length === config.maxBaskets) {
+      alert("You have too many baskets");
+      setBasketSizeDialogOpen(false);
+      return;
+    }
+
     const { basket, basketBounds } = createBasket({
       width,
       height,
@@ -247,7 +260,21 @@ export const Scene = () => {
       tableBounds,
     });
 
-    basket.position.set(movedBasketBounds.min.x, movedBasketBounds.min.y, 0.2);
+    const isBasketBoundsInFreeSpace = isBasketOnAnyBasket({
+      allBasketBounds,
+      newBasketBounds: movedBasketBounds,
+    });
+
+    if (!isBasketBoundsInFreeSpace) {
+      setBasketSizeDialogOpen(false);
+      alert("Basket is on another basket, try placing it somewhere else");
+      return;
+    }
+
+    // get center of bounds - as position of the basket object is center based
+    const centerBounds = movedBasketBounds.getCenter(new THREE.Vector2());
+    basket.position.set(centerBounds.x, centerBounds.y, 0.2);
+
     sceneRef.current?.add(basket);
 
     setAllBasketBounds((state) => [...state, movedBasketBounds]);

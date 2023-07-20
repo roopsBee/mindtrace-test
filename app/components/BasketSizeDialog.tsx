@@ -63,19 +63,21 @@ export const BasketSizeDialog: React.FC<Props> = ({ open, onClose }) => {
         </label>
 
         {errorMessage && <p className="py-2 text-red-800">{errorMessage}</p>}
-        <button
-          type="submit"
-          className="mr-4 rounded border border-gray-800 p-2"
-        >
-          Submit
-        </button>
-        <button
-          type="button"
-          className="rounded border border-gray-800 p-2"
-          onClick={handleRoundInputs}
-        >
-          Round Inputs
-        </button>
+        <div className="py-2">
+          <button
+            type="submit"
+            className="mr-4 rounded border border-gray-800 p-2"
+          >
+            Submit
+          </button>
+          <button
+            type="button"
+            className="rounded border border-gray-800 p-2"
+            onClick={handleRoundInputs}
+          >
+            Round Inputs
+          </button>
+        </div>
       </form>
     </dialog>
   );

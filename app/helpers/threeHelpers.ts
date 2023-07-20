@@ -31,31 +31,19 @@ export const createBasket = ({
   return { basket, basketBounds: basketBounds2d };
 };
 
-export const getFreeBasketPosition = ({
+export const isBasketOnAnyBasket = ({
   allBasketBounds,
   newBasketBounds,
 }: {
   allBasketBounds: THREE.Box2[];
   newBasketBounds: THREE.Box2;
-}) => {
+}): boolean => {
   for (const basketBounds of allBasketBounds) {
     if (basketBounds.intersectsBox(newBasketBounds)) {
-      // move basket to the right and try again
-      const xDiff = basketBounds.max.x - newBasketBounds.min.x;
-      const movedRightBasketBounds = newBasketBounds.translate(
-        new THREE.Vector2(xDiff, 0)
-      );
-
-      for (const basketBounds of allBasketBounds) {
-        if (basketBounds.intersectsBox(movedRightBasketBounds)) {
-          return false;
-        } else {
-          return newBasketBounds;
-        }
-      }
+      return false;
     }
-    return newBasketBounds;
   }
+  return true;
 };
 
 export const setBasketBoundsOnTable = ({
@@ -64,22 +52,6 @@ export const setBasketBoundsOnTable = ({
 }: {
   tableBounds: THREE.Box2;
   basketBounds: THREE.Box2;
-}) => {
-  let newBasketBounds = basketBounds;
-  if (basketBounds.min.x < tableBounds.min.x) {
-    // basketBounds.intersect(tableBounds);
-  }
-  if (basketBounds.max.x > tableBounds.max.x) {
-    // basketBounds.intersect(tableBounds);
-  }
-  if (basketBounds.min.y < tableBounds.min.y) {
-    // newBasketBounds = basketBounds.intersect(tableBounds);
-  }
-  if (basketBounds.max.y > tableBounds.max.y) {
-    // newBasketBounds = basketBounds.intersect(tableBounds);
-  }
-
-  newBasketBounds = basketBounds.intersect(tableBounds);
-
-  return newBasketBounds;
+}): THREE.Box2 => {
+  return basketBounds.intersect(tableBounds);
 };
