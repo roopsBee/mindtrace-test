@@ -232,6 +232,15 @@ export const Scene = () => {
     width: number;
     height: number;
   }) => {
+    const { basket, basketBounds } = createBasket({
+      width,
+      height,
+      x: newBasketPosition.x,
+      y: newBasketPosition.y,
+    });
+    scene?.add(basket);
+    setAllBasketBounds((state) => [...state, basketBounds]);
+
     setBasketSizeDialogOpen(false);
   };
   return (
@@ -239,7 +248,7 @@ export const Scene = () => {
       <div ref={containerRef} />
       <BasketSizeDialog
         open={basketSizeDialogOpen}
-        onClick={handleBasketSizeDialogClose}
+        onClose={handleBasketSizeDialogClose}
       />
     </>
   );

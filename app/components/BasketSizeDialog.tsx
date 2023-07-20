@@ -2,10 +2,10 @@ import React, { useState } from "react";
 
 interface Props {
   open: boolean;
-  onClick: ({ width, height }: { width: number; height: number }) => void;
+  onClose: ({ width, height }: { width: number; height: number }) => void;
 }
 
-export const BasketSizeDialog: React.FC<Props> = ({ open, onClick }) => {
+export const BasketSizeDialog: React.FC<Props> = ({ open, onClose }) => {
   const [width, setWidth] = useState(10);
   const [height, setHeight] = useState(10);
   const [errorMessage, setErrorMessage] = useState("");
@@ -18,7 +18,7 @@ export const BasketSizeDialog: React.FC<Props> = ({ open, onClick }) => {
     }
 
     setErrorMessage("");
-    onClick({ width, height });
+    onClose({ width, height });
   };
 
   const handleRoundInputs = (
