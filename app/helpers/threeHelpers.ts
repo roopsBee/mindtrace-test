@@ -134,5 +134,3 @@ export const positionBasketsByNumberOfApples = ({
     nextX += basketWidth + gap;
   });
 };
-
-export const;
