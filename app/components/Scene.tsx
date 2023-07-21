@@ -44,6 +44,12 @@ export const Scene = () => {
 
   useEffect(() => {
     // init scene
+    const init = initScene({
+      containerRef,
+    });
+
+    if (!init) return;
+
     const {
       camera,
       renderer,
@@ -55,9 +61,7 @@ export const Scene = () => {
       sidePanelApple,
       sidePanelBasket,
       resizeViewport,
-    } = initScene({
-      containerRef,
-    });
+    } = init;
 
     sceneRef.current = scene;
     setTableBounds(tableBox);
